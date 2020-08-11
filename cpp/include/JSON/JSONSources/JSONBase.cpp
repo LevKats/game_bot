@@ -4,7 +4,16 @@ JSON::JSON() {}
 
 JSON::~JSON() {}
 
-std::string JSON::to_string() const { return ""; }
+std::string JSON::text() const {
+    if (type() == "JSONString") {
+        auto res = to_string();
+        return res.substr(1, res.length() - 2);
+    } else {
+        throw std::runtime_error("no text supported");
+    }
+}
+
+/*std::string JSON::to_string() const { return ""; }
 
 std::string JSON::type() const { return "JSON base"; }
 
@@ -12,7 +21,7 @@ std::vector<std::string> JSON::keys() const {
     return std::vector<std::string>();
 }
 
-const JSON &JSON::operator[](std::string) const { return (*this); }
+const JSON &JSON::operator[](std::string) const { return (*this); }*/
 
 std::string JSON::pretty_print(std::string tab) const {
     if (type() == "JSONString") {

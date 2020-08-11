@@ -4,6 +4,8 @@ include_directories(JSON/JSONHeaders)
 
 set(SOURCES
     sources/Field.cpp
+    sources/Character.cpp
+    sources/Player.cpp
     JSON/JSONSources/JSONBase.cpp
     JSON/JSONSources/JSONChildren.cpp
     JSON/JSONSources/JSONParser.cpp
@@ -12,6 +14,8 @@ set(HEADERS
     headers/Constants.h
     headers/Field.h
     headers/JSON.h
+    headers/Character.h
+    headers/Player.h
     JSON/JSONHeaders/JSONBase.h
     JSON/JSONHeaders/JSONChildren.h
     JSON/JSONHeaders/JSONParser.h

@@ -12,13 +12,15 @@ public:
 
     virtual ~JSON();
 
-    virtual std::string to_string() const;
+    virtual std::string to_string() const = 0;
 
-    virtual std::string type() const;
+    virtual std::string type() const = 0;
 
-    virtual std::vector<std::string> keys() const;
+    virtual std::vector<std::string> keys() const = 0;
 
-    virtual const JSON &operator[](std::string) const;
+    virtual const JSON &operator[](std::string) const = 0;
 
     std::string pretty_print(std::string tab = std::string("")) const;
+
+    std::string text() const;
 };

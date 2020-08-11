@@ -1,5 +1,6 @@
 #pragma once
 #include "JSONBase.h"
+#include <exception>
 
 class JSONString : public JSON {
 public:
@@ -27,6 +28,10 @@ public:
 
     void add_item(std::unique_ptr<JSON>);
 
+    void add_item(const std::string &);
+
+    void add_items(const std::vector<std::string> &);
+
     const JSON &operator[](std::string key) const override;
 
     std::string type() const override;
@@ -48,6 +53,10 @@ public:
     const JSON &operator[](std::string key) const override;
 
     void add_item(std::string key, std::unique_ptr<JSON> value);
+
+    void add_item(std::string key, const std::string &value);
+
+    void add_items(const std::map<std::string, std::string> &);
 
     std::string type() const override;
 

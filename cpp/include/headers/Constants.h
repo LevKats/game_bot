@@ -21,21 +21,31 @@ enum CellFlags : uint32_t {
     TREASURE = 2048
 };
 
-enum CommandFlags : uint32_t {
-    PASS = 1,
-    GO = 2,
-    TRY_EXIT = 4,
-    SHOOT = 8,
-    EXPLODE = 16,
+enum Command : uint32_t {
+    PASS = 0,
+    GO = 1,
+    TRY_EXIT = 2,
+    SHOOT = 3,
+    EXPLODE = 4,
+    BEAR_ATACK = 5,
+    COMMAND_MASK = 1 + 2 + 4,
 
-    LEFT = 32,
-    RIGHT = 64,
-    UP = 128,
-    DOWN = 256,
-
-    BEAR_ATACK = 512
+    LEFT = 8 * 0,
+    RIGHT = 8 * 1,
+    UP = 8 * 2,
+    DOWN = 8 * 3,
+    NONE = 8 * 4,
+    DIRECTION_MASK = 8 * (1 + 2 + 4)
 };
 
-enum Answer { SUCCESS = 0, NOTHING = 1, UNK = 2, ERR = 3 };
+enum Answer : uint32_t {
+    SUCCESS = 0,
+    NOTHING = 1,
+    UNK = 2,
+    ERR = 3,
+    STATUS_MASK = 1 + 2,
+
+    HOLL_MASK = 4
+};
 
 enum CharacterType { HUMAN = 0, BEAR = 1 };

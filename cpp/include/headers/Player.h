@@ -1,20 +1,20 @@
 #pragma once
 #include "Character.h"
-#include <istream>
-#include <ostream>
+#include <functional>
 
 class Player : public Character {
 public:
-    Player(std::istream &in, std::ostream &out);
+    Player(std::function<std::string()> in,
+           std::function<void(std::string)> out);
 
     ~Player();
 
-    uint32_t suggest(std::vector<std::vector> cells) override;
+    uint32_t suggest(std::vector<std::vector<uint32_t>> cells) override;
 
-    void inform(Answer) override;
+    void inform(uint32_t) override;
 
 private:
-    std::istream &in;
+    std::function<std::string()> in;
 
-    std::ostream &out;
+    std::function<void(std::string)> out;
 };
