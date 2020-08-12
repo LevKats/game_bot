@@ -21,11 +21,15 @@ public:
 
     Character();
 
+    Character(const Character &);
+
     virtual ~Character();
 
     virtual uint32_t suggest(std::vector<std::vector<uint32_t>> cells) = 0;
 
     virtual void inform(uint32_t) = 0;
+
+    void set_name(std::string);
 
     State get_state() const;
 

@@ -9,9 +9,18 @@ public:
 
     Field(size_t size, uint32_t holl_num);
 
+    Field(const Field &);
+
+    Index shoot_point(Index, uint32_t, bool &) const;
+
+    Index next_wormholl(Index) const;
+
     ~Field();
 
     std::string render() const;
+
+    std::vector<std::vector<uint32_t>> neighborhood(Index i,
+                                                    uint32_t radius) const;
 
     uint32_t &operator[](const Index);
 

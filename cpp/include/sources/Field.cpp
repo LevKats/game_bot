@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <map>
+#include <queue>
 #include <set>
 
 Field::Field(size_t size, uint32_t holl_num)
@@ -10,6 +11,115 @@ Field::Field(size_t size, uint32_t holl_num)
 }
 
 Field::~Field() {}
+
+Field::Field(const Field &f) : data(f.data), wormholles(f.wormholles) {}
+
+Field::Index Field::shoot_point(Field::Index i, uint32_t command,
+                                bool &is_character) const {
+    if (!(command & Command::SHOOT)) {
+        throw std::runtime_error("You aren't shooting now");
+    }
+    uint32_t mask = CellFlags::CHARACTER;
+    Field::Index dv;
+    switch (command & Command::DIRECTION_MASK) {
+    case Command::LEFT:
+        mask |= CellFlags::LEFT_BORDER;
+        dv = {0, -1};
+        break;
+    case Command::RIGHT:
+        mask |= CellFlags::RIGHT_BORDER;
+        dv = {0, +1};
+        break;
+    case Command::UP:
+        mask |= CellFlags::UP_BORDER;
+        dv = {-1, 0};
+        break;
+    case Command::DOWN:
+        mask |= CellFlags::DOWN_BORDER;
+        dv = {+1, 0};
+        break;
+    case Command::NONE:
+        throw std::runtime_error("shooting without direction");
+    }
+    auto change_idx = [&dv](Field::Index &i) {
+        i.first += dv.first;
+        i.second += dv.second;
+    };
+    auto res = i;
+    for (; !((*this)[res] & mask); change_idx(res)) {
+    }
+    is_character = (*this)[res] & CellFlags::CHARACTER;
+    return res;
+}
+
+Field::Index Field::next_wormholl(Field::Index i) const {
+    if (!((*this)[i] & CellFlags::WORM_HOLL)) {
+        throw std::runtime_error("Not a WORM_HOLL");
+    }
+    auto it = std::find(wormholles.begin(), wormholles.end(), i);
+    if (it + 1 == wormholles.end()) {
+        return *wormholles.begin();
+    } else {
+        return *(it + 1);
+    }
+}
+
+std::vector<std::vector<uint32_t>> Field::neighborhood(Field::Index i,
+                                                       uint32_t radius) const {
+    uint32_t y_ = i.first;
+    uint32_t x_ = i.second;
+
+    const uint32_t size = data.size();
+
+    if (!(x_ < size && y_ < size)) {
+        throw std::runtime_error("Incorrect index");
+    }
+
+    std::vector<std::vector<uint32_t>> result(
+        2 * radius - 1,
+        std::vector<uint32_t>(2 * radius - 1, CellFlags::HIDDEN));
+
+    std::vector<std::vector<uint32_t>> used(size, std::vector<uint32_t>(size));
+    std::queue<std::pair<uint32_t, uint32_t>> que;
+
+    uint32_t x_mid = radius - 1;
+    uint32_t y_mid = radius - 1;
+
+    que.push({x_, y_});
+    used[y_][x_] = 1;
+    while (!que.empty()) {
+        auto p = que.front();
+        que.pop();
+        uint32_t x = p.first;
+        uint32_t y = p.second;
+        uint32_t current_radius = used[y][x];
+        uint32_t cell = data[y][x];
+        result[y_mid + (y - y_)][x_mid + (x - x_)] = cell;
+
+        if (current_radius == radius) {
+            continue;
+        }
+
+        if (!(cell & LEFT_BORDER) && !used[y][x - 1]) {
+            que.push({x - 1, y});
+            used[y][x - 1] = current_radius + 1;
+        }
+        if (!(cell & RIGHT_BORDER) && !used[y][x + 1]) {
+            que.push({x + 1, y});
+            used[y][x + 1] = current_radius + 1;
+        }
+        if (!(cell & UP_BORDER) && !used[y - 1][x]) {
+            que.push({x, y - 1});
+            used[y - 1][x] = current_radius + 1;
+        }
+        if (!(cell & DOWN_BORDER) && !used[y + 1][x]) {
+            que.push({x, y + 1});
+            used[y + 1][x] = current_radius + 1;
+        }
+    }
+
+    return result;
+}
 
 std::string Field::render() const {
     std::string result;
@@ -80,7 +190,9 @@ const std::vector<Field::Index> &Field::get_holles() const {
 }
 
 uint32_t &Field::operator[](const Field::Index i) {
-    assert(i.first < data.size() && i.second < data[i.first].size());
+    if (!(i.first < data.size() && i.second < data[i.first].size())) {
+        throw std::runtime_error("Incorrect Field index");
+    }
     return data[i.first][i.second];
 }
 

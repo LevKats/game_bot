@@ -6,6 +6,7 @@ set(SOURCES
     sources/Field.cpp
     sources/Character.cpp
     sources/Player.cpp
+    sources/Logger.cpp
     JSON/JSONSources/JSONBase.cpp
     JSON/JSONSources/JSONChildren.cpp
     JSON/JSONSources/JSONParser.cpp
@@ -16,6 +17,7 @@ set(HEADERS
     headers/JSON.h
     headers/Character.h
     headers/Player.h
+    headers/Logger.h
     JSON/JSONHeaders/JSONBase.h
     JSON/JSONHeaders/JSONChildren.h
     JSON/JSONHeaders/JSONParser.h

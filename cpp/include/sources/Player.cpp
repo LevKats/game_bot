@@ -2,10 +2,14 @@
 #include "JSON.h"
 
 Player::Player(std::function<std::string()> in,
-               std::function<void(std::string)> out)
-    : Character(), in(in), out(out) {}
+               std::function<void(std::string)> out, std::string name)
+    : in(in), out(out) {
+    set_name(name);
+}
 
 Player::~Player() {}
+
+Player::Player(const Player &p) : Character(p), in(p.in), out(p.out) {}
 
 uint32_t Player::suggest(std::vector<std::vector<uint32_t>> cells) {
     JSONObject context;
@@ -101,6 +105,10 @@ uint32_t Player::suggest(std::vector<std::vector<uint32_t>> cells) {
         res |= Command::EXPLODE;
     } else if (command_name == "BEAR_ATACK") {
         res |= Command::BEAR_ATACK;
+    } else if (command_name == "FINNISH_GAME") {
+        res |= Command::FINNISH_GAME;
+    } else if (command_name == "GIVE_UP") {
+        res |= Command::GIVE_UP;
     } else {
         throw std::runtime_error("Invalid command");
     }

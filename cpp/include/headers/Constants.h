@@ -28,6 +28,8 @@ enum Command : uint32_t {
     SHOOT = 3,
     EXPLODE = 4,
     BEAR_ATACK = 5,
+    FINNISH_GAME = 6,
+    GIVE_UP = 7,
     COMMAND_MASK = 1 + 2 + 4,
 
     LEFT = 8 * 0,

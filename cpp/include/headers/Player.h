@@ -5,7 +5,9 @@
 class Player : public Character {
 public:
     Player(std::function<std::string()> in,
-           std::function<void(std::string)> out);
+           std::function<void(std::string)> out, std::string name);
+
+    Player(const Player &);
 
     ~Player();
 
