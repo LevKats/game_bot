@@ -10,6 +10,8 @@ public:
     using State = struct {
         bool alive;
 
+        bool treasure;
+
         uint32_t ammos;
 
         uint32_t bombs;

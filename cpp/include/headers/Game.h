@@ -7,7 +7,7 @@
 class Game {
 public:
     using PlayerFullState = struct {
-        Character player;
+        std::shared_ptr<Character> player;
         Field::Index index;
         std::vector<Field::Index> trace;
     };
@@ -28,14 +28,19 @@ public:
 
     void step();
 
-    Field get_field() const;
+    const Field &get_field() const;
 
     bool is_running() const;
 
-    Player winner() const;
+    std::shared_ptr<Character> winner();
 
 private:
-    void _one_turn(PlayerFullState &);
+    void _one_turn(std::vector<PlayerFullState>::iterator);
+
+    uint32_t _end_turn(Field::Index &i, std::vector<Field::Index> &trace,
+                       Character::State &state);
+
+    void _process_point(Field::Index i, Character::State &state);
 
     std::vector<PlayerFullState> bears;
 

@@ -52,6 +52,92 @@ Field::Index Field::shoot_point(Field::Index i, uint32_t command,
     return res;
 }
 
+Field::Index Field::go_point(Field::Index i, uint32_t command,
+                             bool &success) const {
+    if (!(command & Command::GO)) {
+        throw std::runtime_error("You aren't going now");
+    }
+    uint32_t mask = 0;
+    Field::Index dv;
+    switch (command & Command::DIRECTION_MASK) {
+    case Command::LEFT:
+        mask |= CellFlags::LEFT_BORDER;
+        dv = {0, -1};
+        break;
+    case Command::RIGHT:
+        mask |= CellFlags::RIGHT_BORDER;
+        dv = {0, +1};
+        break;
+    case Command::UP:
+        mask |= CellFlags::UP_BORDER;
+        dv = {-1, 0};
+        break;
+    case Command::DOWN:
+        mask |= CellFlags::DOWN_BORDER;
+        dv = {+1, 0};
+        break;
+    case Command::NONE:
+        throw std::runtime_error("going without direction");
+    }
+
+    auto change_idx = [&dv](Field::Index i) {
+        i.first += dv.first;
+        i.second += dv.second;
+        return i;
+    };
+    if (!((*this)[i] & mask)) {
+        success = true;
+        return change_idx(i);
+    } else {
+        success = false;
+        return i;
+    }
+}
+
+void Field::explode(Field::Index i, uint32_t command, bool &success) {
+    if (!(command & Command::EXPLODE)) {
+        throw std::runtime_error("You aren't going now");
+    }
+    uint32_t mask = 0;
+    uint32_t mask2 = 0;
+    Field::Index i2;
+    bool can_be_destroyed;
+    switch (command & Command::DIRECTION_MASK) {
+    case Command::LEFT:
+        mask |= CellFlags::LEFT_BORDER;
+        mask2 |= CellFlags::RIGHT_BORDER;
+        i2 = {i.first, i.second - 1};
+        can_be_destroyed = i.second != 0;
+        break;
+    case Command::RIGHT:
+        mask |= CellFlags::RIGHT_BORDER;
+        mask2 |= CellFlags::LEFT_BORDER;
+        i2 = {i.first, i.second + 1};
+        can_be_destroyed = i.second != data.size() - 1;
+        break;
+    case Command::UP:
+        mask |= CellFlags::UP_BORDER;
+        mask2 |= CellFlags::DOWN_BORDER;
+        i2 = {i.first - 1, i.second};
+        can_be_destroyed = i.first != 0;
+        break;
+    case Command::DOWN:
+        mask |= CellFlags::DOWN_BORDER;
+        mask2 |= CellFlags::UP_BORDER;
+        i2 = {i.first + 1, i.second};
+        can_be_destroyed = i.first != data.size() - 1;
+        break;
+    case Command::NONE:
+        throw std::runtime_error("going without direction");
+    }
+
+    success = can_be_destroyed && ((*this)[i] & mask);
+    if (success) {
+        (*this)[i] ^= mask;
+        (*this)[i2] ^= mask2;
+    }
+}
+
 Field::Index Field::next_wormholl(Field::Index i) const {
     if (!((*this)[i] & CellFlags::WORM_HOLL)) {
         throw std::runtime_error("Not a WORM_HOLL");
@@ -131,6 +217,9 @@ std::string Field::render() const {
             temp[2 * i][2 * j] = temp[2 * i + 2][2 * j + 2] =
                 temp[2 * i][2 * j + 2] = temp[2 * i + 2][2 * j] = '#';
 
+            if ((*this)[{i, j}] & CellFlags::TRACE) {
+                temp[2 * i + 1][2 * j + 1] = '.';
+            }
             if ((*this)[{i, j}] & CellFlags::CHARACTER) {
                 temp[2 * i + 1][2 * j + 1] = 'C';
             }
@@ -168,6 +257,10 @@ std::string Field::render() const {
 
             if ((*this)[{i, j}] & CellFlags::EXIT) {
                 temp[2 * i + 1][2 * j + 1] = 'E';
+            }
+
+            if ((*this)[{i, j}] & CellFlags::CURSOR) {
+                temp[2 * i + 1][2 * j + 1] = '^';
             }
 
             if ((*this)[{i, j}] & CellFlags::HIDDEN) {

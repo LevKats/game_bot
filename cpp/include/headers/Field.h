@@ -13,6 +13,10 @@ public:
 
     Index shoot_point(Index, uint32_t, bool &) const;
 
+    Index go_point(Index, uint32_t, bool &) const;
+
+    void explode(Index, uint32_t, bool &);
+
     Index next_wormholl(Index) const;
 
     ~Field();

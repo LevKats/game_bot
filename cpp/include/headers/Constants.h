@@ -18,7 +18,9 @@ enum CellFlags : uint32_t {
     WORM_HOLL = 512,
 
     EXIT = 1024,
-    TREASURE = 2048
+    TREASURE = 2048,
+
+    CURSOR = 4096
 };
 
 enum Command : uint32_t {

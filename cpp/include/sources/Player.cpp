@@ -30,6 +30,7 @@ uint32_t Player::suggest(std::vector<std::vector<uint32_t>> cells) {
 
             state->add_items({
                 {"ALIVE", std::to_string(get_state().alive)},
+                {"TREASURE", std::to_string(get_state().treasure)},
                 {"AMMOS", std::to_string(get_state().ammos)},
                 {"BOMBS", std::to_string(get_state().bombs)},
                 {"TYPE", typ},
@@ -78,7 +79,7 @@ uint32_t Player::suggest(std::vector<std::vector<uint32_t>> cells) {
         context.add_item("CELLS", std::move(cells_list));
     }
 
-    out(context.pretty_print());
+    out(context.to_string() + '\n');
 
     auto ans = JSONParser(in()).parse();
 
@@ -98,12 +99,45 @@ uint32_t Player::suggest(std::vector<std::vector<uint32_t>> cells) {
     } else if (command_name == "GO") {
         res |= Command::GO;
     } else if (command_name == "TRY_EXIT") {
+        if (get_state().type == CharacterType::BEAR) {
+            throw std::runtime_error("Incorrect CharacterType");
+        }
+        if (!get_state().treasure) {
+            throw std::runtime_error("no treasure");
+        }
+        if (!get_state().alive) {
+            throw std::runtime_error("not alive");
+        }
         res |= Command::TRY_EXIT;
     } else if (command_name == "SHOOT") {
+        if (get_state().type == CharacterType::BEAR) {
+            throw std::runtime_error("Incorrect CharacterType");
+        }
+        if (!get_state().alive) {
+            throw std::runtime_error("not alive");
+        }
+        if (!get_state().ammos) {
+            throw std::runtime_error("no ammos");
+        }
         res |= Command::SHOOT;
     } else if (command_name == "EXPLODE") {
+        if (get_state().type == CharacterType::BEAR) {
+            throw std::runtime_error("Incorrect CharacterType");
+        }
+        if (!get_state().alive) {
+            throw std::runtime_error("not alive");
+        }
+        if (!get_state().bombs) {
+            throw std::runtime_error("no bombs");
+        }
         res |= Command::EXPLODE;
     } else if (command_name == "BEAR_ATACK") {
+        if (get_state().type == CharacterType::HUMAN) {
+            throw std::runtime_error("Incorrect CharacterType");
+        }
+        if (!get_state().alive) {
+            throw std::runtime_error("not alive");
+        }
         res |= Command::BEAR_ATACK;
     } else if (command_name == "FINNISH_GAME") {
         res |= Command::FINNISH_GAME;
@@ -122,6 +156,9 @@ uint32_t Player::suggest(std::vector<std::vector<uint32_t>> cells) {
     } else if (direction == "DOWN") {
         res |= Command::DOWN;
     } else if (direction == "NONE") {
+        if (res & (Command::GO | Command::SHOOT | Command::EXPLODE)) {
+            throw std::runtime_error("Invalid direction");
+        }
         res |= Command::NONE;
     } else {
         throw std::runtime_error("Invalid command");
@@ -151,5 +188,5 @@ void Player::inform(uint32_t ans) {
     JSONObject res;
     res.add_items({{"STATUS", status}, {"HOLL", holl}});
 
-    out(res.pretty_print());
+    out(res.pretty_print() + '\n');
 }
