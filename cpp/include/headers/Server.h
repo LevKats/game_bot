@@ -6,7 +6,15 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include <condition_variable>
+#include <mutex>
 #include <thread>
+
+#include "Field.h"
+#include "Game.h"
+#include "JSON.h"
+#include "Logger.h"
+#include "Player.h"
 
 #include <iostream>
 
@@ -18,10 +26,16 @@ public:
 
     void Start();
 
-    void Stop();
+    void Stop(bool);
 
     void Join();
 
 private:
-    void OnRun(int socket);
+    void OnRun();
+
+    void OnGame(int socket);
+
+    Logger log;
+
+    std::thread tr;
 };

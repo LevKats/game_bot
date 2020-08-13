@@ -95,7 +95,7 @@ void Game::_one_turn(std::vector<Game::PlayerFullState>::iterator it) {
 
     if (state.type == CharacterType::HUMAN) {
         for (auto it2 = humans.begin(); it2 != humans.end(); ++it2) {
-            if (it2 != it) {
+            if (it2 != it && it2->player->state.alive) {
                 atacking[it2->index] |= CellFlags::CHARACTER;
             }
         }
@@ -104,11 +104,13 @@ void Game::_one_turn(std::vector<Game::PlayerFullState>::iterator it) {
         }
     } else if (state.type == CharacterType::BEAR) {
         for (auto it2 = humans.begin(); it2 != humans.end(); ++it2) {
-            atacking[it2->index] |= CellFlags::CHARACTER;
-            suggest[it2->index] |= CellFlags::CHARACTER;
-            for (auto ind : it2->trace) {
-                suggest[ind] |= CellFlags::TRACE;
-                atacking[ind] |= CellFlags::TRACE;
+            if (it2->player->state.alive) {
+                atacking[it2->index] |= CellFlags::CHARACTER;
+                suggest[it2->index] |= CellFlags::CHARACTER;
+                for (auto ind : it2->trace) {
+                    suggest[ind] |= CellFlags::TRACE;
+                    atacking[ind] |= CellFlags::TRACE;
+                }
             }
         }
     } else {
