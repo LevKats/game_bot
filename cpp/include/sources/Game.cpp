@@ -6,7 +6,8 @@
 
 Game::Game(const std::vector<Game::PlayerFullState> &bears_,
            const std::vector<Game::PlayerFullState> &humans_,
-           const Field &field, Logger &logger, GameSettings settings)
+           const Field &field, std::shared_ptr<Logger> logger,
+           GameSettings settings)
     : bears(bears_), humans(humans_), field(field), running(true),
       logger(logger), settings(settings) {
     for (auto &bear : bears) {
@@ -91,7 +92,7 @@ void Game::_one_turn(std::vector<Game::PlayerFullState>::iterator it) {
         }
     }
     debug[index] |= CellFlags::CURSOR;
-    logger.log("\n" + debug.render());
+    logger->log("\n" + debug.render());
 
     if (state.type == CharacterType::HUMAN) {
         for (auto it2 = humans.begin(); it2 != humans.end(); ++it2) {
@@ -125,7 +126,7 @@ void Game::_one_turn(std::vector<Game::PlayerFullState>::iterator it) {
                     {"bombs", std::to_string(state.bombs)},
                     {"type", std::to_string(state.type)},
                     {"name", state.name}});
-    logger.log(info.to_string());
+    logger->log(info.to_string());
 
     // uint32_t answer = 0;
     uint32_t radius = (state.type == CharacterType::HUMAN)
@@ -137,8 +138,8 @@ void Game::_one_turn(std::vector<Game::PlayerFullState>::iterator it) {
         command = player.suggest(suggest.neighborhood(index, radius));
     } catch (std::runtime_error &e) {
         player.inform(Answer::ERR | _end_turn(index, trace, state));
-        logger.log(std::string("std::runtime_error(") + '"' + e.what() + '"' +
-                   ')');
+        logger->log(std::string("std::runtime_error(") + '"' + e.what() + '"' +
+                    ')');
         return;
     }
 

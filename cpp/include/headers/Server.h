@@ -1,13 +1,17 @@
 #pragma once
 #include <arpa/inet.h>
-#include <fcntl.h>
+#include <cstring>
+#include <netdb.h>
 #include <netinet/in.h>
-#include <sys/shm.h>
+#include <pthread.h>
+#include <signal.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
-#include <condition_variable>
+#include <atomic>
 #include <mutex>
+#include <set>
 #include <thread>
 
 #include "Field.h"
@@ -20,11 +24,11 @@
 
 class Server {
 public:
-    Server();
+    Server(std::shared_ptr<Logger> logger);
 
     ~Server();
 
-    void Start();
+    void Start(uint16_t port, uint32_t n_workers);
 
     void Stop(bool);
 
@@ -33,9 +37,36 @@ public:
 private:
     void OnRun();
 
-    void OnGame(int socket);
+    void Worker(int client_socket);
 
-    Logger log;
+    std::shared_ptr<Logger> logger;
 
-    std::thread tr;
+    std::atomic<bool> running;
+
+    uint32_t _free_workers_count;
+
+    std::set<int> _client_sockets;
+
+    std::mutex _client_sockets_mutex;
+
+    std::thread _thread;
+
+    int _server_socket;
+};
+
+class BufferIO {
+public:
+    BufferIO(size_t buff_size);
+
+    ~BufferIO();
+
+    std::string Read(int socket);
+
+    void Write(std::string, int socket);
+
+private:
+    char *buffer;
+    size_t size;
+    int socket;
+    std::string message;
 };

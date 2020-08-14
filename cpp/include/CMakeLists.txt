@@ -8,6 +8,7 @@ set(SOURCES
     sources/Player.cpp
     sources/Logger.cpp
     sources/Game.cpp
+    sources/Server.cpp
     JSON/JSONSources/JSONBase.cpp
     JSON/JSONSources/JSONChildren.cpp
     JSON/JSONSources/JSONParser.cpp
@@ -20,6 +21,7 @@ set(HEADERS
     headers/Player.h
     headers/Logger.h
     headers/Game.h
+    headers/Server.h
     JSON/JSONHeaders/JSONBase.h
     JSON/JSONHeaders/JSONChildren.h
     JSON/JSONHeaders/JSONParser.h

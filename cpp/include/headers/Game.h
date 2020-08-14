@@ -21,8 +21,8 @@ public:
     };
 
     Game(const std::vector<PlayerFullState> &,
-         const std::vector<PlayerFullState> &, const Field &, Logger &,
-         GameSettings);
+         const std::vector<PlayerFullState> &, const Field &,
+         std::shared_ptr<Logger> logger, GameSettings);
 
     ~Game();
 
@@ -50,7 +50,7 @@ private:
 
     bool running;
 
-    Logger &logger;
+    std::shared_ptr<Logger> logger;
 
     const GameSettings settings;
 };

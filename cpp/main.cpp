@@ -1,9 +1,8 @@
-#include "Game.h"
-#include "JSON.h"
+#include "Server.h"
 #include <iostream>
 
 int main() {
-    Logger l(std::cout);
+    /*Logger l(std::cout);
     std::shared_ptr<Player> human(new Player(
         []() {
             std::string command;
@@ -33,6 +32,13 @@ int main() {
     Game g({{bear, {1, 2}, {}}}, {player}, f, l, {3, 1, 2, 3, 3});
     while (g.is_running()) {
         g.step();
-    }
+    }*/
+
+    std::shared_ptr<Logger> log(new Logger(std::cout));
+    Server s(log);
+    s.Start(8080, 2);
+    std::cin.get();
+    // std::cout << "error" << std::endl;
+    s.Stop(true);
     return 0;
 }

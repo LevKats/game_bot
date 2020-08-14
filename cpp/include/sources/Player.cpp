@@ -79,7 +79,7 @@ uint32_t Player::suggest(std::vector<std::vector<uint32_t>> cells) {
         context.add_item("CELLS", std::move(cells_list));
     }
 
-    out(context.to_string() + '\n');
+    out(context.to_string());
 
     auto ans = JSONParser(in()).parse();
 
@@ -156,7 +156,8 @@ uint32_t Player::suggest(std::vector<std::vector<uint32_t>> cells) {
     } else if (direction == "DOWN") {
         res |= Command::DOWN;
     } else if (direction == "NONE") {
-        if (res & (Command::GO | Command::SHOOT | Command::EXPLODE)) {
+        if (res == Command::GO || res == Command::SHOOT ||
+            res == Command::EXPLODE) {
             throw std::runtime_error("Invalid direction");
         }
         res |= Command::NONE;
@@ -188,5 +189,5 @@ void Player::inform(uint32_t ans) {
     JSONObject res;
     res.add_items({{"STATUS", status}, {"HOLL", holl}});
 
-    out(res.pretty_print() + '\n');
+    out(res.to_string());
 }
