@@ -35,7 +35,7 @@ public:
     std::shared_ptr<Character> winner();
 
 private:
-    void _one_turn(std::vector<PlayerFullState>::iterator);
+    bool _one_turn(std::vector<PlayerFullState>::iterator);
 
     uint32_t _end_turn(Field::Index &i, std::vector<Field::Index> &trace,
                        Character::State &state);

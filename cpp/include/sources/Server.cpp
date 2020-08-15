@@ -218,6 +218,20 @@ void Server::Worker(int client_socket) {
         while (g.is_running()) {
             g.step();
         }
+
+        std::string winner_name;
+        std::string has_winner;
+        try {
+            winner_name = g.winner()->get_state().name;
+            has_winner = "1";
+        } catch (std::runtime_error &e) {
+            winner_name = "NONE";
+            has_winner = "0";
+        }
+        JSONObject game_results;
+        game_results.add_items(
+            {{"HAS_WINNER", has_winner}, {"NAME", winner_name}});
+        io.Write(game_results.to_string(), client_socket);
     } catch (std::runtime_error &e) {
         logger->log("Error on connection " + std::to_string(client_socket) +
                     " std::runtime_error(" + '"' + e.what() + '"' + ")\n" +

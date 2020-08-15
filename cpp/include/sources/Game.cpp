@@ -65,7 +65,7 @@ void Game::_process_point(Field::Index i, Character::State &state) {
     }
 }
 
-void Game::_one_turn(std::vector<Game::PlayerFullState>::iterator it) {
+bool Game::_one_turn(std::vector<Game::PlayerFullState>::iterator it) {
     auto &player = *(it->player);
     auto &state = it->player->state;
     auto &index = it->index;
@@ -140,7 +140,7 @@ void Game::_one_turn(std::vector<Game::PlayerFullState>::iterator it) {
         player.inform(Answer::ERR | _end_turn(index, trace, state));
         logger->log(std::string("std::runtime_error(") + '"' + e.what() + '"' +
                     ')');
-        return;
+        return false;
     }
 
     bool success;
@@ -163,6 +163,9 @@ void Game::_one_turn(std::vector<Game::PlayerFullState>::iterator it) {
         if (field[index] & CellFlags::EXIT) {
             // we checked other conditions in Player.cpp
             player.inform(Answer::SUCCESS | _end_turn(index, trace, state));
+            auto pos = it - humans.begin();
+            humans.erase(it + 1, humans.end());
+            humans.erase(humans.begin(), humans.begin() + pos);
             running = false;
         } else {
             player.inform(Answer::ERR | _end_turn(index, trace, state));
@@ -240,28 +243,47 @@ void Game::_one_turn(std::vector<Game::PlayerFullState>::iterator it) {
             field[index] |= CellFlags::TREASURE;
         }
         if (state.type == HUMAN) {
-            humans.erase(it);
+            // humans.erase(it);
+            return true;
         } else {
-            bears.erase(it);
+            // bears.erase(it);
+            return true;
         }
         break;
     }
+    return false;
 }
 
 void Game::step() {
     if (!is_running()) {
         throw std::runtime_error("!is_running()");
     }
-    for (auto it = humans.begin(); it != humans.end(); ++it) {
-        _one_turn(it);
+    for (size_t ind = 0; ind < humans.size();) {
+        auto it = humans.begin() + ind;
+        auto to_remove = _one_turn(it);
         if (!is_running()) {
             return;
         }
+        if (to_remove) {
+            humans.erase(it);
+            if (humans.size() == 0) {
+                running = false;
+                return;
+            }
+        } else {
+            ++ind;
+        }
     }
-    for (auto it = bears.begin(); it != bears.end(); ++it) {
-        _one_turn(it);
+    for (size_t ind = 0; ind < bears.size();) {
+        auto it = bears.begin() + ind;
+        auto to_remove = _one_turn(it);
         if (!is_running()) {
             return;
+        }
+        if (to_remove) {
+            bears.erase(it);
+        } else {
+            ++ind;
         }
     }
 }
