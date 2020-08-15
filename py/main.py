@@ -4,15 +4,17 @@ from human import Message
 from functools import partial
 from os import environ
 import socket
+from time import sleep
 
 import telebot
 from telebot import types
+from telebot import logger
 
 
 PORT = int(environ['PORT'])
 TOKEN = environ['TOKEN']
 
-bot = telebot.TeleBot(TOKEN)
+bot = telebot.TeleBot(TOKEN, threaded=False)
 
 
 def get_game_decorator():
@@ -102,4 +104,9 @@ def text_handler(games, message):
 
 
 if __name__ == "__main__":
-    bot.polling(none_stop=True, interval=0)
+    while True:
+        try:
+            bot.polling(none_stop=True)
+        except Exception as e:
+            logger.error(e)
+            sleep(5)
