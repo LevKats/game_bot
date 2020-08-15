@@ -1,4 +1,20 @@
 from player import Player
+"""
+from enum import Enum
+from random import shuffle
+class SearchResult(Enum):
+    TRACE = 1
+    CHARACTER = 2
+    NONE = 3
+
+
+def find_way(cells, point, used):
+    if min(point[0], point[1]) < 0 or max(point[0], point[1]] > len(used):
+        return SearchResult.NONE, 'NONE'
+    if cells[]
+    used[point[0]][point[1]] = True
+    directions = ['LEFT', 'RIGHT', 'UP', 'DOWN']
+"""
 
 
 class Bear(Player):

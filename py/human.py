@@ -23,7 +23,7 @@ def pretty_print_status(recieved):
 def pretty_print_state(recieved):
     ans = ""
     ans += "Игрок {}".format(recieved['STATE']['NAME']) + '\n'
-    ans += "\tУ вас {} пастронов и {} бомб".format(recieved['STATE']['AMMOS'], recieved["STATE"]["BOMBS"]) + '\n'
+    ans += "\tУ вас {} патронов и {} бомб".format(recieved['STATE']['AMMOS'], recieved["STATE"]["BOMBS"]) + '\n'
     if recieved["STATE"]["ALIVE"] == '1':
         ans += "\tВы живы и у вас {}".format(
             "есть сокровище" if recieved['STATE']['TREASURE'] == '1' else 'нет сокровища'
@@ -88,16 +88,16 @@ class Human(Player):
         while True:
             yield "команда", [
                 ["GO", "SHOOT", "EXPLODE", "PASS"],
-                ["TRY_EXIT", "GIVE_UP", "FINISH_GAME"]
+                ["TRY_EXIT", "GIVE_UP", "FINNISH_GAME"]
             ]
             command = yield
             if command.id != self.__id:
                 continue
             command = command.text.upper()
-            if command in {'GIVE_UP', 'FINISH_GAME'}:
+            if command in {'GIVE_UP', 'FINNISH_GAME'}:
                 sure = False
                 while True:
-                    yield "Вы уверены?", ["YES", "NO"]
+                    yield "Вы уверены?", [["YES", "NO"]]
                     ans = yield
                     if ans.id != self.__id:
                         continue
@@ -107,6 +107,8 @@ class Human(Player):
                         break
                 if not sure:
                     continue
+                else:
+                    break
             if command in require_dirrection_commands | without_dirrection_commands:
                 break
         if command in require_dirrection_commands:

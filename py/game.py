@@ -26,6 +26,9 @@ class Game:
         self.__bear_count = 1
         self.__running = False
 
+    def __del__(self):
+        self.__socket.close()
+
     def __add_players_and_start(self):
         while True:
             yield "игра скоро начнется", [["добавить в игру", "начать игру"]]
