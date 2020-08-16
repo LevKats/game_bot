@@ -53,4 +53,6 @@ private:
     std::shared_ptr<Logger> logger;
 
     const GameSettings settings;
+
+    std::shared_ptr<Character> _winner;
 };

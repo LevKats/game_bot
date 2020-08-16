@@ -50,7 +50,9 @@ Server::Server(std::shared_ptr<Logger> logger) : logger(logger) {}
 
 Server::~Server() {}
 
-void Server::Start(uint16_t port, uint32_t n_workers) {
+void Server::Start(uint16_t port, uint32_t n_workers, uint32_t timeout) {
+    _timeout = timeout;
+
     logger->log("Start network service");
 
     sigset_t sig_mask;
@@ -142,7 +144,7 @@ void Server::OnRun() {
         // Configure read timeout
         {
             struct timeval tv;
-            tv.tv_sec = 3600;
+            tv.tv_sec = _timeout;
             tv.tv_usec = 0;
             setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO,
                        (const char *)&tv, sizeof tv);
@@ -211,7 +213,7 @@ void Server::Worker(int client_socket) {
             }
         }
 
-        Game g(bears, humans, field, logger, {3, 1, 2, 3, 3});
+        Game g(bears, humans, field, logger, {3, 1, 3, 3, 3});
         logger->log("The game begins on socket " +
                     std::to_string(client_socket));
 
@@ -242,6 +244,8 @@ void Server::Worker(int client_socket) {
 
         _client_sockets.erase(client_socket);
         close(client_socket);
+        logger->log("Closed connection on socket " +
+                    std::to_string(client_socket));
         ++_free_workers_count;
     }
 }

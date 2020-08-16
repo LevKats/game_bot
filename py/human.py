@@ -5,47 +5,47 @@ from collections import namedtuple
 Message = namedtuple('Message', ['text', 'id'])
 
 
-def pretty_print_status(recieved):
+def pretty_print_status(received):
     ans = ""
-    if recieved['STATUS'] == 'SUCCESS':
+    if received['STATUS'] == 'SUCCESS':
         ans += 'успех' + '\n'
-    elif recieved['STATUS'] == 'NOTHING':
+    elif received['STATUS'] == 'NOTHING':
         ans += 'ничего не произошло' + '\n'
-    elif recieved['STATUS'] == 'ERR':
+    elif received['STATUS'] == 'ERR':
         ans += 'неверная команда' + '\n'
     else:
         raise RuntimeError("strange status")
-    if recieved['HOLL'] == '1':
+    if received['HOLL'] == '1':
         ans += 'вы переместились' + '\n'
     return ans
 
 
-def pretty_print_state(recieved):
+def pretty_print_state(received):
     ans = ""
-    ans += "Игрок {}".format(recieved['STATE']['NAME']) + '\n'
-    ans += "\tУ вас {} патронов и {} бомб".format(recieved['STATE']['AMMOS'], recieved["STATE"]["BOMBS"]) + '\n'
-    if recieved["STATE"]["ALIVE"] == '1':
+    ans += "Игрок {}".format(received['STATE']['NAME']) + '\n'
+    ans += "\tУ вас {} патронов и {} бомб".format(received['STATE']['AMMOS'], received["STATE"]["BOMBS"]) + '\n'
+    if received["STATE"]["ALIVE"] == '1':
         ans += "\tВы живы и у вас {}".format(
-            "есть сокровище" if recieved['STATE']['TREASURE'] == '1' else 'нет сокровища'
+            "есть сокровище" if received['STATE']['TREASURE'] == '1' else 'нет сокровища'
         ) + '\n'
     else:
         ans += '\tСейчас вы призрак и не можете делать многого' + '\n'
     ans += "На вашей клетке:" + '\n'
 
     something_exist = False
-    if recieved['CELLS'][0][0]['ARMORY'] == '1':
+    if received['CELLS'][0][0]['ARMORY'] == '1':
         something_exist = True
         ans += "\tесть арсенал" + '\n'
-    if recieved['CELLS'][0][0]['EXIT'] == '1':
+    if received['CELLS'][0][0]['EXIT'] == '1':
         something_exist = True
         ans += "\tесть выход" + '\n'
-    if recieved['CELLS'][0][0]['HOSPITAL'] == '1':
+    if received['CELLS'][0][0]['HOSPITAL'] == '1':
         something_exist = True
         ans += "\tесть больница" + '\n'
-    if recieved['CELLS'][0][0]['TREASURE'] == '1':
+    if received['CELLS'][0][0]['TREASURE'] == '1':
         something_exist = True
         ans += "\tесть сокровище" '\n'
-    if recieved['CELLS'][0][0]['WORM_HOLL'] == '1':
+    if received['CELLS'][0][0]['WORM_HOLL'] == '1':
         something_exist = True
         ans += "\tесть портал" + '\n'
     if not something_exist:
@@ -54,16 +54,16 @@ def pretty_print_state(recieved):
     ans += 'Вокруг вас есть стены:' + '\n'
 
     something_exist = False
-    if recieved['CELLS'][0][0]['LEFT_BORDER'] == '1':
+    if received['CELLS'][0][0]['LEFT_BORDER'] == '1':
         something_exist = True
         ans += "\tслева" + '\n'
-    if recieved['CELLS'][0][0]['RIGHT_BORDER'] == '1':
+    if received['CELLS'][0][0]['RIGHT_BORDER'] == '1':
         something_exist = True
         ans += "\tсправа" + '\n'
-    if recieved['CELLS'][0][0]['UP_BORDER'] == '1':
+    if received['CELLS'][0][0]['UP_BORDER'] == '1':
         something_exist = True
         ans += "\tсверху" + '\n'
-    if recieved['CELLS'][0][0]['DOWN_BORDER'] == '1':
+    if received['CELLS'][0][0]['DOWN_BORDER'] == '1':
         something_exist = True
         ans += "\tснизу" + '\n'
     if not something_exist:
@@ -77,6 +77,7 @@ class Human(Player):
         self.__command = None
         self.__id = id_
 
+    @property
     def name(self):
         return self.__name
 
@@ -131,6 +132,7 @@ class Human(Player):
     def inform(self, message_from_server):
         yield pretty_print_status(message_from_server), None
 
+    @property
     def command(self):
         if self.__command is None:
             raise RuntimeError("no command yet")

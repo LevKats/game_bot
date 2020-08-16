@@ -123,7 +123,7 @@ class Game:
                 name = obj['STATE']['NAME']
                 player = self.__players[name]
                 yield from player.suggest(obj)
-                self.__socket.send((json.dumps(player.command()) + '\n').encode('utf-8'))
+                self.__socket.send((json.dumps(player.command) + '\n').encode('utf-8'))
                 server_message = next(server_message_generator)
                 obj = json.loads(server_message)
                 yield from player.inform(obj)

@@ -28,7 +28,7 @@ public:
 
     ~Server();
 
-    void Start(uint16_t port, uint32_t n_workers);
+    void Start(uint16_t port, uint32_t n_workers, uint32_t timeout);
 
     void Stop(bool);
 
@@ -52,6 +52,8 @@ private:
     std::thread _thread;
 
     int _server_socket;
+
+    uint32_t _timeout;
 };
 
 class BufferIO {

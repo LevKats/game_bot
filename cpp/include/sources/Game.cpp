@@ -9,7 +9,7 @@ Game::Game(const std::vector<Game::PlayerFullState> &bears_,
            const Field &field, std::shared_ptr<Logger> logger,
            GameSettings settings)
     : bears(bears_), humans(humans_), field(field), running(true),
-      logger(logger), settings(settings) {
+      logger(logger), settings(settings), _winner(nullptr) {
     for (auto &bear : bears) {
         auto &state = bear.player->state;
         state = {true, false, 0, 0, CharacterType::BEAR, state.name};
@@ -163,9 +163,7 @@ bool Game::_one_turn(std::vector<Game::PlayerFullState>::iterator it) {
         if (field[index] & CellFlags::EXIT) {
             // we checked other conditions in Player.cpp
             player.inform(Answer::SUCCESS | _end_turn(index, trace, state));
-            auto pos = it - humans.begin();
-            humans.erase(it + 1, humans.end());
-            humans.erase(humans.begin(), humans.begin() + pos);
+            _winner = it->player;
             running = false;
         } else {
             player.inform(Answer::ERR | _end_turn(index, trace, state));
@@ -296,8 +294,8 @@ std::shared_ptr<Character> Game::winner() {
     if (is_running()) {
         throw std::runtime_error("the game still running");
     }
-    if (humans.size() == 1) {
-        return humans[0].player;
+    if (_winner) {
+        return _winner;
     }
     throw std::runtime_error("there is now winner somehow");
 }

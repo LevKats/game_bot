@@ -11,8 +11,14 @@ from telebot import types
 from telebot import logger
 
 
-PORT = int(environ['PORT'])
-TOKEN = environ['TOKEN']
+try:
+    PORT = int(environ['PORT'])
+except KeyError:
+    PORT = int(input('PORT '))
+try:
+    TOKEN = environ['TOKEN']
+except KeyError:
+    TOKEN = input('TOKEN ')
 
 bot = telebot.TeleBot(TOKEN, threaded=False)
 
@@ -32,13 +38,13 @@ DECORATOR_WITH_GAMES = get_game_decorator()
 def _start(games, message):
     if message.chat.id not in games:
         sock = socket.socket()
+        sock.settimeout(20.0)
         sock.connect(('localhost', PORT))
 
         game = Game(sock)
         gen = game.on_run()
 
         games[message.chat.id] = game, gen
-        gen.send(None)
 
         try:
             while True:
@@ -50,12 +56,24 @@ def _start(games, message):
                     keyboard = types.ReplyKeyboardMarkup()
                     for row in mes[1]:
                         keyboard.row(*row)
+                    keyboard.one_time_keyboard = True
                     bot.send_message(message.chat.id, text, reply_markup=keyboard)
                 else:
-                    markup = types.ReplyKeyboardRemove(selective=False)
-                    bot.send_message(message.chat.id, text, markup)
+                    # markup = types.ReplyKeyboardRemove(selective=False)
+                    # bot.send_message(message.chat.id, text, markup)
+                    bot.send_message(message.chat.id, text)
         except StopIteration:
             del game
+            games.pop(message.chat.id)
+            # markup = types.ReplyKeyboardRemove(selective=False)
+            # bot.send_message(message.chat.id, "в следующий раз используйте /start", markup)
+            bot.send_message(message.chat.id, "в следующий раз используйте /start")
+        except Exception as e:
+            print(e)
+            del game
+            games.pop(message.chat.id)
+            bot.send_message(message.chat.id, ("Вероятно, сессия была просрочена и игра завершена\n"
+                                               "В следующий раз используйте /start"))
     else:
         bot.send_message(message.chat.id, "Игра уже началась")
 
@@ -85,10 +103,12 @@ def text_handler(games, message):
                 keyboard = types.ReplyKeyboardMarkup()
                 for row in mes[1]:
                     keyboard.row(*row)
+                keyboard.one_time_keyboard = True
                 bot.send_message(message.chat.id, text, reply_markup=keyboard)
             else:
-                markup = types.ReplyKeyboardRemove(selective=False)
-                bot.send_message(message.chat.id, text, markup)
+                # markup = types.ReplyKeyboardRemove(selective=False)
+                # bot.send_message(message.chat.id, text, markup)
+                bot.send_message(message.chat.id, text)
 
             mes = gen.send(None)
             if mes is None:
@@ -101,12 +121,23 @@ def text_handler(games, message):
         bot.send_message(message.chat.id, "use /start to start")
     except StopIteration:
         del game
+        games.pop(message.chat.id)
+        # markup = types.ReplyKeyboardRemove(selective=False)
+        # bot.send_message(message.chat.id, "в следующий раз используйте /start", markup)
+        bot.send_message(message.chat.id, "в следующий раз используйте /start")
+    except Exception as e:
+        print(e)
+        del game
+        games.pop(message.chat.id)
+        bot.send_message(message.chat.id, ("Вероятно, сессия была просрочена и игра завершена\n"
+                                           "В следующий раз используйте /start"))
 
 
 if __name__ == "__main__":
     while True:
         try:
             bot.polling(none_stop=True)
+            break
         except Exception as e:
             logger.error(e)
             sleep(5)
