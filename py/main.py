@@ -3,6 +3,7 @@ from human import Message
 
 from functools import partial
 from os import environ
+from sys import argv
 import socket
 from time import sleep
 
@@ -11,14 +12,21 @@ from telebot import types
 from telebot import logger
 
 
-try:
-    PORT = int(environ['PORT'])
-except KeyError:
-    PORT = int(input('PORT '))
-try:
-    TOKEN = environ['TOKEN']
-except KeyError:
-    TOKEN = input('TOKEN ')
+if len(argv) < 3:
+    try:
+        PORT = int(environ['PORT'])
+    except KeyError:
+        PORT = int(input('PORT '))
+    try:
+        TOKEN = environ['TOKEN']
+    except KeyError:
+        TOKEN = input('TOKEN ')
+else:
+    PORT = int(argv[1])
+    TOKEN = argv[2]
+
+# print(PORT)
+# print(TOKEN)
 
 bot = telebot.TeleBot(TOKEN, threaded=False)
 
@@ -133,7 +141,7 @@ def text_handler(games, message):
                                            "В следующий раз используйте /start"))
 
 
-if __name__ == "__main__":
+def main():
     while True:
         try:
             bot.polling(none_stop=True)
@@ -141,3 +149,7 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(e)
             sleep(5)
+
+
+if __name__ == "__main__":
+    main()
