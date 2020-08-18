@@ -1,7 +1,15 @@
 #include "Server.h"
+#include <csignal>
+#include <functional>
 #include <iostream>
 
+std::function<void()> func;
+
+void signal_handler(int signum) { func(); }
+
 int main(int argc, char *argv[]) {
+    signal(SIGINT, signal_handler);
+
     if (argc < 4) {
         std::cout << "usage: ./main PORT WORKERS TIMEOUT";
         return 0;
@@ -13,8 +21,8 @@ int main(int argc, char *argv[]) {
     std::shared_ptr<Logger> log(new Logger(std::cout));
     Server s(log);
     s.Start(port, n_workers, timeout);
-    std::cin.get();
+    func = [&s]() { s.Stop(false); };
+    s.Join();
     // std::cout << "error" << std::endl;
-    s.Stop(true);
     return 0;
 }
