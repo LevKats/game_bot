@@ -206,7 +206,7 @@ void Server::OnRun() {
                     logger->log("closing connection on socket " +
                                 std::to_string(it->first) +
                                 " time limit exceeded");
-                    // it = _client_sockets.erase(it);
+                    it = _client_sockets.erase(it);
                     //++_free_workers_count;
                 } else {
                     ++it;
