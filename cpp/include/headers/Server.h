@@ -10,8 +10,9 @@
 #include <unistd.h>
 
 #include <atomic>
+#include <chrono>
+#include <map>
 #include <mutex>
-#include <set>
 #include <thread>
 
 #include "Field.h"
@@ -45,7 +46,7 @@ private:
 
     uint32_t _free_workers_count;
 
-    std::set<int> _client_sockets;
+    std::map<int, std::chrono::system_clock::time_point> _client_sockets;
 
     std::mutex _client_sockets_mutex;
 

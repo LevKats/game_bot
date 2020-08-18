@@ -108,7 +108,7 @@ void Server::Stop(bool join) {
     {
         std::unique_lock<std::mutex> lock(_client_sockets_mutex);
         for (auto socket : _client_sockets) {
-            shutdown(socket, SHUT_RDWR);
+            shutdown(socket.first, SHUT_RDWR);
         }
     }
     if (join) {
@@ -153,13 +153,32 @@ void Server::OnRun() {
         // TODO: Start new thread and process data from/to connection
         {
             std::unique_lock<std::mutex> lock(_client_sockets_mutex);
+            auto now = std::chrono::system_clock::now();
+            for (auto it = _client_sockets.begin();
+                 it != _client_sockets.end();) {
+                if (now - it->second > std::chrono::seconds(_timeout)) {
+                    shutdown(it->first, SHUT_RDWR);
+                    logger->log("Shutdown connection on socket " +
+                                std::to_string(it->first) +
+                                " time limit exceeded");
+                    it = _client_sockets.erase(it);
+                    ++_free_workers_count;
+                } else {
+                    ++it;
+                }
+            }
+
+            logger->log("_free_workers_count = " +
+                        std::to_string(_free_workers_count));
+
             if (!running.load() || !_free_workers_count) {
                 logger->log("Closed connection on socket " +
                             std::to_string(client_socket) + " server to busy");
                 close(client_socket);
             } else {
                 --_free_workers_count;
-                _client_sockets.insert(client_socket);
+                _client_sockets.insert(
+                    {client_socket, std::chrono::system_clock::now()});
                 auto worker =
                     std::thread(&Server::Worker, this, client_socket);
                 worker.detach();
@@ -191,14 +210,34 @@ void Server::Worker(int client_socket) {
             auto &obj = players[key];
 
             std::shared_ptr<Player> player(new Player(
-                [client_socket, &io]() {
+                [client_socket, &io, &all_sockets = _client_sockets,
+                 &m = _client_sockets_mutex]() {
                     auto s = io.Read(client_socket);
                     // std::cout << s << '\n';
+                    {
+                        std::unique_lock<std::mutex> lock(m);
+                        auto find = all_sockets.find(client_socket);
+                        if (find != all_sockets.end()) {
+                            find->second = std::chrono::system_clock::now();
+                        } else {
+                            throw std::runtime_error("socket deleted");
+                        }
+                    }
                     return s;
                 },
-                [client_socket, &io](std::string s) {
+                [client_socket, &io, &all_sockets = _client_sockets,
+                 &m = _client_sockets_mutex](std::string s) {
                     // std::cout << s << '\n';
                     io.Write(s, client_socket);
+                    {
+                        std::unique_lock<std::mutex> lock(m);
+                        auto find = all_sockets.find(client_socket);
+                        if (find != all_sockets.end()) {
+                            find->second = std::chrono::system_clock::now();
+                        } else {
+                            throw std::runtime_error("socket deleted");
+                        }
+                    }
                 },
                 obj["NAME"].text()));
 
