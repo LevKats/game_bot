@@ -28,7 +28,7 @@ else:
 # print(PORT)
 # print(TOKEN)
 
-bot = telebot.TeleBot(TOKEN, threaded=False)
+bot = telebot.TeleBot(TOKEN, threaded=True)
 
 
 def get_game_decorator():
@@ -142,13 +142,7 @@ def text_handler(games, message):
 
 
 def main():
-    while True:
-        try:
-            bot.polling(none_stop=True)
-            break
-        except Exception as e:
-            logger.error(e)
-            sleep(5)
+    bot.infinity_polling(none_stop=True)
 
 
 if __name__ == "__main__":

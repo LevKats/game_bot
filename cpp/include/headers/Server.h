@@ -40,6 +40,8 @@ private:
 
     void Worker(int client_socket);
 
+    void Deleter(int client_socket);
+
     std::shared_ptr<Logger> logger;
 
     std::atomic<bool> running;
@@ -49,6 +51,10 @@ private:
     std::map<int, std::chrono::system_clock::time_point> _client_sockets;
 
     std::mutex _client_sockets_mutex;
+
+    std::map<int, std::chrono::system_clock::time_point> _deleting_sockets;
+
+    std::mutex _deleting_sockets_mutex;
 
     std::thread _thread;
 

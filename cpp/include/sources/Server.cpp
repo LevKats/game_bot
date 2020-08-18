@@ -111,6 +111,12 @@ void Server::Stop(bool join) {
             shutdown(socket.first, SHUT_RDWR);
         }
     }
+    {
+        std::unique_lock<std::mutex> lock(_deleting_sockets_mutex);
+        for (auto socket : _deleting_sockets) {
+            shutdown(socket.first, SHUT_RDWR);
+        }
+    }
     if (join) {
         Join();
     } else {
@@ -121,6 +127,22 @@ void Server::Stop(bool join) {
 void Server::Join() {
     assert(_thread.joinable());
     _thread.join();
+}
+
+void Server::Deleter(int client_socket) {
+    try {
+        auto io = BufferIO(4096);
+        io.Write("END", client_socket);
+        close(client_socket);
+        {
+            std::unique_lock<std::mutex> lock(_deleting_sockets_mutex);
+            _deleting_sockets.erase(client_socket);
+        }
+    } catch (std::runtime_error &e) {
+        logger->log("Deleter on socket" + std::to_string(client_socket) +
+                    " catched exception" + " std::runtime_error(" + '"' +
+                    e.what() + '"' + ")\n" + "connection closed");
+    }
 }
 
 void Server::OnRun() {
@@ -144,25 +166,48 @@ void Server::OnRun() {
         // Configure read timeout
         {
             struct timeval tv;
-            tv.tv_sec = _timeout;
+            tv.tv_sec = 3600;
             tv.tv_usec = 0;
             setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO,
                        (const char *)&tv, sizeof tv);
         }
 
-        // TODO: Start new thread and process data from/to connection
+        {
+            std::unique_lock<std::mutex> lock(_deleting_sockets_mutex);
+            auto now = std::chrono::system_clock::now();
+            for (auto it = _deleting_sockets.begin();
+                 it != _deleting_sockets.end();) {
+                if (now - it->second > std::chrono::seconds(_timeout)) {
+                    shutdown(it->first, SHUT_RDWR);
+                    logger->log("Shutdown connection on socket " +
+                                std::to_string(it->first) +
+                                " time limit exceeded");
+                    it = _deleting_sockets.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+        }
+
         {
             std::unique_lock<std::mutex> lock(_client_sockets_mutex);
             auto now = std::chrono::system_clock::now();
             for (auto it = _client_sockets.begin();
                  it != _client_sockets.end();) {
                 if (now - it->second > std::chrono::seconds(_timeout)) {
-                    shutdown(it->first, SHUT_RDWR);
-                    logger->log("Shutdown connection on socket " +
+                    {
+                        std::unique_lock<std::mutex> lock(
+                            _deleting_sockets_mutex);
+                        _deleting_sockets.insert({client_socket, now});
+                    }
+                    auto deleter =
+                        std::thread(&Server::Deleter, this, client_socket);
+                    deleter.detach();
+                    logger->log("closing connection on socket " +
                                 std::to_string(it->first) +
                                 " time limit exceeded");
-                    it = _client_sockets.erase(it);
-                    ++_free_workers_count;
+                    // it = _client_sockets.erase(it);
+                    //++_free_workers_count;
                 } else {
                     ++it;
                 }
