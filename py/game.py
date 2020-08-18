@@ -3,11 +3,23 @@ import json
 from human import Human
 from bear import Bear
 
+from wrapt_timeout_decorator import timeout
+
+
+@timeout(10)
+def custom_recv(sock):
+    return sock.recv(1024)
+
+
+@timeout(10)
+def custom_send(sock, message):
+    return sock.send(message)
+
 
 def messages(sock):
     res = ""
     while True:
-        st = sock.recv(1024)
+        st = custom_recv(sock)
         res += st.decode('utf-8').replace('\x00', '')
         while res.find('\n') != -1:
             ind = res.find('\n')
@@ -109,7 +121,7 @@ class Game:
             ]
         }
 
-        self.__socket.send((json.dumps(description) + '\n').encode('utf-8'))
+        custom_send(self.__socket, (json.dumps(description) + '\n').encode('utf-8'))
 
         yield "Начинаем", None
 
@@ -123,7 +135,7 @@ class Game:
                 name = obj['STATE']['NAME']
                 player = self.__players[name]
                 yield from player.suggest(obj)
-                self.__socket.send((json.dumps(player.command) + '\n').encode('utf-8'))
+                custom_send(self.__socket, (json.dumps(player.command) + '\n').encode('utf-8'))
                 server_message = next(server_message_generator)
                 obj = json.loads(server_message)
                 yield from player.inform(obj)
