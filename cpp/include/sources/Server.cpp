@@ -198,15 +198,16 @@ void Server::OnRun() {
                     {
                         std::unique_lock<std::mutex> lock(
                             _deleting_sockets_mutex);
-                        _deleting_sockets.insert({client_socket, now});
+                        _deleting_sockets.insert({it->first, now});
                     }
                     auto deleter =
-                        std::thread(&Server::Deleter, this, client_socket);
+                        std::thread(&Server::Deleter, this, it->first);
                     deleter.detach();
                     logger->log("closing connection on socket " +
                                 std::to_string(it->first) +
                                 " time limit exceeded");
                     it = _client_sockets.erase(it);
+                    ++_free_workers_count;
                     //++_free_workers_count;
                 } else {
                     ++it;
@@ -221,9 +222,9 @@ void Server::OnRun() {
                             std::to_string(client_socket) + " server to busy");
                 close(client_socket);
             } else {
-                --_free_workers_count;
                 _client_sockets.insert(
                     {client_socket, std::chrono::system_clock::now()});
+                --_free_workers_count;
                 auto worker =
                     std::thread(&Server::Worker, this, client_socket);
                 worker.detach();
@@ -326,10 +327,11 @@ void Server::Worker(int client_socket) {
     {
         std::unique_lock<std::mutex> lock(_client_sockets_mutex);
 
+        auto count = _client_sockets.size();
         _client_sockets.erase(client_socket);
+        _free_workers_count += count - _client_sockets.size();
         close(client_socket);
         logger->log("Closed connection on socket " +
                     std::to_string(client_socket));
-        ++_free_workers_count;
     }
 }
