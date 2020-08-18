@@ -327,11 +327,13 @@ void Server::Worker(int client_socket) {
     {
         std::unique_lock<std::mutex> lock(_client_sockets_mutex);
 
-        auto count = _client_sockets.size();
-        _client_sockets.erase(client_socket);
-        _free_workers_count += count - _client_sockets.size();
-        close(client_socket);
-        logger->log("Closed connection on socket " +
-                    std::to_string(client_socket));
+        auto it = _client_sockets.find(client_socket);
+        if (it != _client_sockets.end()) {
+            _client_sockets.erase(it);
+            ++_free_workers_count;
+            close(client_socket);
+            logger->log("Closed connection on socket " +
+                        std::to_string(client_socket));
+        }
     }
 }
